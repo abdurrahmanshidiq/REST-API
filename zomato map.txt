@@ -1,0 +1,76 @@
+#############
+##### 1 #####
+#############
+
+##########
+#get data from zomato
+######################
+restaurant_url = 'https://developers.zomato.com/api/v2.1/location_details?entity_id=74&entity_type=city'
+key = "717558631f74f636d4177c1f351f5fa8"
+head_info = {
+    'user-key' : key
+}
+restaurant_data = requests.get(restaurant_url,headers=head_info)
+restaurant_data
+
+#############
+##### 2 #####
+#############
+
+#chech data path on raw data
+
+restaurant_data.json()['best_rated_restaurant'][0]['restaurant']['name']
+
+#############
+##### 2 #####
+#############
+
+#create dictionary
+g = 0
+dic_rest = {}
+for i in restaurant_data.json()['best_rated_restaurant']:
+    name = i['restaurant']['name']
+    address = i['restaurant']['location']['address']
+    latitude = i['restaurant']['location']['latitude']
+    longitude = i['restaurant']['location']['longitude']
+    cuisine = i['restaurant']['cuisines']
+    costfor2 = i['restaurant']['average_cost_for_two']
+    dic_rest[str(g)] = {'name': name,'address': address ,'latitude': latitude,'longitude': longitude,'cuisine': cuisine,'costfor2': costfor2}
+    g+=1
+
+#make data frame
+dfx = pd.DataFrame(dic_rest)
+dfx = dfx.T
+
+###### OR #######
+
+#make list
+new_dic = []
+
+for q in restaurant_data.json()['best_rated_restaurant']:
+    asd = []
+    asd.append(q['restaurant']['name'])
+    asd.append(q['restaurant']['location']['address'])
+    asd.append(q['restaurant']['location']['latitude'])
+    asd.append(q['restaurant']['location']['longitude'])
+    asd.append(q['restaurant']['cuisines'])
+    asd.append(q['restaurant']['average_cost_for_two'])
+    new_dic.append(asd)
+
+pd.DataFrame(new_dic, columns=('name','address','latitude','longitude','cuisine','cost_for_2'))
+
+
+#############
+##### 3 #####
+#############
+
+# create map
+
+jakarta = folium.Map(location=[-6.1753924,106.8249641], zoom_start=13)
+for i in new_dic:
+    folium.Marker(location=[i[2],i[3]],
+                 tooltip=str(i[0]),
+                 popup=str(f'<b>Nama:</b>{i[0]},<b>Alamat:</b>{i[1]},<b>Cuisine:</b>{i[4]},<b>Cost for 2 ppl: </b>{i[5]}'),
+                 icon=folium.Icon(color='green',prefix='fa',icon='50px')).add_to(jakarta)
+
+jakarta
